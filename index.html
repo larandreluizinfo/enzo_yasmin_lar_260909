@@ -1,12 +1,402 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>enzo_yasmin_lar_260909</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Jogo do Grau 2P — Enzo & Yasmin</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; -webkit-tap-highlight-color:transparent; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background:#0f0f14; color:#fff; overflow-x:hidden; min-height:100vh; }
+  #wrap { max-width:1000px; margin:0 auto; padding:12px; }
+  header { text-align:center; padding:14px 8px; }
+  header h1 { font-size:clamp(22px,5vw,38px); letter-spacing:1px; }
+  header h1 span { color:#ff3b3b; }
+  header p { opacity:.8; font-size:14px; margin-top:4px; }
+  #menu, #hud, #finish { background:#181821; border:1px solid #2a2a3a; border-radius:14px; padding:14px; margin-top:10px; }
+  .players-select { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media(max-width:640px){ .players-select{ grid-template-columns:1fr; } }
+  .p-card { background:#222233; border-radius:12px; padding:12px; border:2px solid transparent; }
+  .p-card.p1 { border-color:#00c3ff; } .p-card.p2 { border-color:#ffcf00; }
+  .p-card h2 { font-size:18px; margin-bottom:8px; }
+  .moto-preview { height:110px; border-radius:10px; display:flex; align-items:center; justify-content:center; font-size:64px; position:relative; overflow:hidden; }
+  .moto-name { text-align:center; font-weight:bold; margin:8px 0 2px; font-size:17px; }
+  .moto-desc { text-align:center; font-size:12px; opacity:.75; margin-bottom:8px; }
+  .stats { font-size:12px; margin-top:6px; }
+  .bar { height:8px; background:#111; border-radius:99px; overflow:hidden; margin:3px 0 7px; }
+  .bar > div { height:100%; border-radius:99px; }
+  .sel-row { display:flex; justify-content:space-between; gap:8px; margin-top:8px; }
+  button { cursor:pointer; border:0; border-radius:10px; padding:10px 14px; font-weight:bold; font-size:15px; }
+  .btn-small { background:#33334d; color:#fff; flex:1; }
+  .btn-small:active { transform:scale(.96); }
+  #btnStart { width:100%; margin-top:12px; background:linear-gradient(90deg,#ff3b3b,#ff7b00); color:#fff; font-size:19px; padding:14px; }
+  .controls-info { margin-top:10px; font-size:13px; line-height:1.7; background:#101018; padding:10px; border-radius:10px; }
+  .controls-info b { color:#ffcf00; }
+  #gameArea { display:none; margin-top:10px; }
+  canvas { width:100%; height:auto; background:#87ceeb; border-radius:14px; display:block; border:1px solid #2a2a3a; touch-action:none; }
+  #hud { display:flex; gap:10px; flex-wrap:wrap; }
+  .hud-box { flex:1; min-width:140px; background:#222233; border-radius:10px; padding:8px 10px; font-size:14px; }
+  .hud-box.p1 { border-left:5px solid #00c3ff; } .hud-box.p2 { border-left:5px solid #ffcf00; }
+  #msg { text-align:center; font-size:clamp(28px,7vw,56px); font-weight:900; text-shadow:0 4px 0 #000; margin:8px 0; min-height:1.2em; }
+  #touch { display:none; grid-template-columns:1fr 1fr 1fr 1fr; gap:8px; margin-top:10px; }
+  @media(pointer:coarse){ #touch{ display:grid; } }
+  .tbtn { padding:18px 8px; font-size:15px; user-select:none; }
+  .tbtn.p1a{ background:#00c3ff; } .tbtn.p1b{ background:#0077aa; color:#fff; }
+  .tbtn.p2a{ background:#ffcf00; } .tbtn.p2b{ background:#aa7700; color:#fff; }
+  #finish { display:none; text-align:center; }
+  #finish h2 { font-size:28px; margin-bottom:8px; }
+  #btnAgain, #btnMenu { margin:6px; }
+  #btnAgain { background:#00c851; color:#fff; } #btnMenu { background:#444; color:#fff; }
+  footer { text-align:center; opacity:.5; font-size:12px; padding:14px; }
+</style>
 </head>
 <body>
-  <h1>enzo_yasmin_lar_260909</h1>
-  <p>Site publicado via GitHub Pages.</p>
+<div id="wrap">
+<header>
+<h1>🏍️ JOGO DO <span>GRAU</span> 2P</h1>
+<p>Enzo & Yasmin • 2 jogadores no mesmo teclado • escolha sua moto!</p>
+</header>
+
+<div id="menu">
+<div class="players-select">
+<div class="p-card p1">
+<h2>🔵 Jogador 1</h2>
+<div class="moto-preview" id="prev1">🏍️</div>
+<div class="moto-name" id="name1"></div>
+<div class="moto-desc" id="desc1"></div>
+<div class="stats" id="stats1"></div>
+<div class="sel-row">
+<button class="btn-small" onclick="trocarMoto(0,-1)">◀ A</button>
+<button class="btn-small" onclick="trocarMoto(0,1)">D ▶</button>
+</div>
+</div>
+<div class="p-card p2">
+<h2>🟡 Jogador 2</h2>
+<div class="moto-preview" id="prev2">🏍️</div>
+<div class="moto-name" id="name2"></div>
+<div class="moto-desc" id="desc2"></div>
+<div class="stats" id="stats2"></div>
+<div class="sel-row">
+<button class="btn-small" onclick="trocarMoto(1,-1)">◀ ◀</button>
+<button class="btn-small" onclick="trocarMoto(1,1)">▶ ▶</button>
+</div>
+</div>
+</div>
+<button id="btnStart" onclick="iniciarCorrida()">▶ COMEÇAR CORRIDA (Enter)</button>
+<div class="controls-info">
+<b>Como jogar (manter o grau):</b><br>
+🔵 <b>P1:</b> segure <b>W</b> para acelerar / empinar, <b>S</b> para baixar a frente<br>
+🟡 <b>P2:</b> segure <b>↑</b> para acelerar / empinar, <b>↓</b> para baixar<br>
+⚠️ Mantenha o grau na <b>zona verde (25°–70°)</b> para ganhar TURBO + pontos. Passou de 85° = <b>capotou!</b><br>
+🏁 Corrida de 2000m. Quem cruzar primeiro vence. <b>R</b> reinicia • <b>Esc</b> volta ao menu.
+</div>
+</div>
+
+<div id="gameArea">
+<div id="hud">
+<div class="hud-box p1" id="hud1"></div>
+<div class="hud-box p2" id="hud2"></div>
+</div>
+<div id="msg"></div>
+<canvas id="cv" width="960" height="420"></canvas>
+<div id="touch">
+<button class="tbtn p1a" id="tP1A">P1 🏁<br>W</button>
+<button class="tbtn p1b" id="tP1B">P1 🛑<br>S</button>
+<button class="tbtn p2a" id="tP2A">P2 🏁<br>▲</button>
+<button class="tbtn p2b" id="tP2B">P2 🛑<br>▼</button>
+</div>
+<div style="text-align:center; margin-top:8px;">
+<button class="btn-small" onclick="voltarMenu()">⬅ Menu (Esc)</button>
+<button class="btn-small" onclick="iniciarCorrida()">↻ Reiniciar (R)</button>
+</div>
+</div>
+
+<div id="finish">
+<h2 id="winText">🏆</h2>
+<p id="finishStats" style="line-height:1.8;"></p>
+<button id="btnAgain" onclick="iniciarCorrida()">↻ Jogar de novo</button>
+<button id="btnMenu" onclick="voltarMenu()">⬅ Trocar motos</button>
+</div>
+
+<footer>Feito para Enzo & Yasmin • GitHub Pages • controles: P1 W/S • P2 ↑/↓</footer>
+</div>
+
+<script>
+const MOTOS = [
+  { nome:"Honda Fan 160", emoji:"🏍️", cor:"#e60000", cor2:"#7a0000", desc:"Leve e fácil de empinar", vel:132, ctrl:9, arr:8 },
+  { nome:"Yamaha Fazer 250", emoji:"🏍️", cor:"#0055ff", cor2:"#002a80", desc:"Equilibrada, boa de curva", vel:143, ctrl:8, arr:8.5 },
+  { nome:"Honda CB Twister 300F", emoji:"🏍️", cor:"#111111", cor2:"#444444", desc:"Forte e estável no grau", vel:152, ctrl:7, arr:9 },
+  { nome:"Yamaha MT-03", emoji:"🏍️", cor:"#00c851", cor2:"#00551f", desc:"Esportiva, muito rápida", vel:170, ctrl:6, arr:9.5 },
+  { nome:"Honda XRE 300", emoji:"🏍️", cor:"#ffffff", cor2:"#999999", desc:"Alta, perfeita p/ trilha", vel:138, ctrl:9.5, arr:7.5 },
+  { nome:"Yamaha Lander 250", emoji:"🏍️", cor:"#ff7b00", cor2:"#7a3a00", desc:"Torque bruto na arrancada", vel:135, ctrl:8.5, arr:9 },
+  { nome:"Honda Bros 160", emoji:"🏍️", cor:"#8a00ff", cor2:"#3d0066", desc:"Clássica do grau de rua", vel:128, ctrl:10, arr:7 },
+  { nome:"Kawasaki Ninja 400", emoji:"🏍️", cor:"#00ffcc", cor2:"#006655", desc:"Foguete! Difícil segurar", vel:180, ctrl:5, arr:10 },
+];
+let sel = [0, 1];
+let estado = "menu";
+let players = [];
+let camX = 0;
+let countT = 0;
+let fim = false;
+const PISTA = 2000;
+const cv = document.getElementById("cv");
+const ctx = cv.getContext("2d");
+const keys = {};
+
+function bar(v,max){ return `<div class="bar"><div style="width:${Math.round(v/max*100)}%;background:linear-gradient(90deg,#00ff88,#ffcf00)"></div></div>`; }
+function renderMenu(){
+  for(let i=0;i<2;i++){
+    const m = MOTOS[sel[i]];
+    document.getElementById("prev"+(i+1)).style.background = `linear-gradient(135deg, ${m.cor}, ${m.cor2})`;
+    document.getElementById("name"+(i+1)).textContent = m.emoji+" "+m.nome;
+    document.getElementById("desc"+(i+1)).textContent = m.desc;
+    document.getElementById("stats"+(i+1)).innerHTML =
+      `⚡ Vel ${m.vel}km/h ${bar(m.vel,180)}🎯 Controle ${bar(m.ctrl,10)}🚀 Arrancada ${bar(m.arr,10)}`;
+  }
+  document.getElementById("hud1").innerHTML = `🔵 P1 • ${MOTOS[sel[0]].nome}`;
+  document.getElementById("hud2").innerHTML = `🟡 P2 • ${MOTOS[sel[1]].nome}`;
+}
+function trocarMoto(p,dir){
+  sel[p] = (sel[p]+dir+MOTOS.length)%MOTOS.length;
+  // evita mesma moto
+  if(sel[0]===sel[1]) sel[p]=(sel[p]+dir+MOTOS.length)%MOTOS.length;
+  renderMenu();
+  beep(300+p*100,0.07);
+}
+function mkPlayer(idx, motoIdx, lane){
+  const m = MOTOS[motoIdx];
+  return { id:idx, moto:m, x:0, v:0, ang:0, crash:0, overT:0, pontos:0, turbo:0, lane, finished:0, wheel:0 };
+}
+function iniciarCorrida(){
+  document.getElementById("menu").style.display="none";
+  document.getElementById("finish").style.display="none";
+  document.getElementById("gameArea").style.display="block";
+  players=[mkPlayer(0,sel[0],0), mkPlayer(1,sel[1],1)];
+  estado="count"; countT=3.5; fim=false; camX=0;
+  document.getElementById("msg").textContent="3";
+  window.scrollTo(0,0);
+}
+function voltarMenu(){
+  estado="menu";
+  document.getElementById("gameArea").style.display="none";
+  document.getElementById("finish").style.display="none";
+  document.getElementById("menu").style.display="block";
+  renderMenu();
+}
+
+// input
+window.addEventListener("keydown", e=>{
+  if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"," "].includes(e.key)) e.preventDefault();
+  keys[e.key.toLowerCase()]=true; keys[e.key]=true;
+  if(estado==="menu"){
+    if(e.key.toLowerCase()==="a") trocarMoto(0,-1);
+    if(e.key.toLowerCase()==="d") trocarMoto(0,1);
+    if(e.key==="ArrowLeft") trocarMoto(1,-1);
+    if(e.key==="ArrowRight") trocarMoto(1,1);
+    if(e.key==="Enter") iniciarCorrida();
+  } else {
+    if(e.key.toLowerCase()==="r") iniciarCorrida();
+    if(e.key==="Escape") voltarMenu();
+    if(e.key==="Enter" && fim) iniciarCorrida();
+  }
+});
+window.addEventListener("keyup", e=>{ keys[e.key.toLowerCase()]=false; keys[e.key]=false; });
+function bindTouch(id, key){
+  const el=document.getElementById(id);
+  const on=e=>{e.preventDefault(); keys[key]=true; keys[key.toLowerCase()]=true;};
+  const off=e=>{e.preventDefault(); keys[key]=false; keys[key.toLowerCase()]=false;};
+  el.addEventListener("touchstart",on,{passive:false});
+  el.addEventListener("touchend",off,{passive:false});
+  el.addEventListener("mousedown",on); el.addEventListener("mouseup",off); el.addEventListener("mouseleave",off);
+}
+bindTouch("tP1A","w"); bindTouch("tP1B","s");
+bindTouch("tP2A","ArrowUp"); bindTouch("tP2B","ArrowDown");
+
+// audio simples
+let AC=null;
+function beep(f,d){ try{ AC=AC||new (window.AudioContext||window.webkitAudioContext)(); const o=AC.createOscillator(),g=AC.createGain(); o.frequency.value=f; o.connect(g); g.connect(AC.destination); g.gain.value=0.12; o.start(); g.gain.exponentialRampToValueAtTime(0.001,AC.currentTime+d); o.stop(AC.currentTime+d);}catch(e){} }
+
+let last=performance.now();
+function loop(now){
+  const dt=Math.min(0.033,(now-last)/1000); last=now;
+  if(estado==="count"||estado==="race") update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+function update(dt){
+  if(estado==="count"){
+    countT-=dt;
+    const m=document.getElementById("msg");
+    if(countT>2.5) m.textContent="3";
+    else if(countT>1.5) m.textContent="2";
+    else if(countT>0.5) m.textContent="1";
+    else if(countT>0) m.textContent="JÁÁÁ! 🏁";
+    else { estado="race"; m.textContent=""; beep(880,0.3); }
+    return;
+  }
+  if(fim) return;
+  let todosChegaram=true;
+  players.forEach((p,i)=>{
+    if(p.finished) return;
+    todosChegaram=false;
+    const acc = i===0 ? (keys["w"]||keys["W"]) : keys["ArrowUp"];
+    const brk = i===0 ? (keys["s"]||keys["S"]) : keys["ArrowDown"];
+    const m=p.moto;
+    if(p.crash>0){
+      p.crash-=dt; p.v=0; p.ang=Math.max(0,p.ang-120*dt);
+      if(p.crash<=0) beep(400,0.15);
+    } else {
+      const arrF = 14 + m.arr*3.2;
+      const vmax = m.vel/3.6; // m/s
+      if(acc){ p.v += arrF*dt; p.ang += (46 - m.ctrl*2.2 + p.v*0.35)*dt; }
+      else { p.v -= 6*dt; p.ang -= (28+m.ctrl*2)*dt; }
+      if(brk){ p.v -= 28*dt; p.ang -= 70*dt; }
+      // arrasto
+      p.v -= p.v*0.25*dt;
+      p.v=Math.max(0,Math.min(vmax*1.25,p.v));
+      p.ang=Math.max(0,Math.min(96,p.ang));
+      p.wheel+=p.v*dt*2;
+      // zona ideal = turbo
+      if(p.ang>=25 && p.ang<=70 && p.v>8){
+        p.turbo=1;
+        p.v += 6*dt;
+        p.pontos += dt*(10+p.v*0.8);
+      } else p.turbo=0;
+      // risco de cair
+      if(p.ang>=85){
+        p.overT+=dt;
+        if(p.overT>0.55){
+          p.crash=2; p.overT=0; p.ang=0; p.pontos=Math.max(0,p.pontos-150);
+          beep(120,0.4);
+          document.getElementById("msg").textContent = (i===0?"🔵 P1":"🟡 P2")+" CAPOTOU! 💥";
+          setTimeout(()=>{ if(!fim) document.getElementById("msg").textContent=""; },900);
+        }
+      } else p.overT=Math.max(0,p.overT-dt*2);
+      p.x += p.v*dt;
+      if(p.x>=PISTA){ p.finished=nowSec(); p.v=0; beep(i===0?660:990,0.4); }
+    }
+  });
+  // camera segue líder
+  const lead=Math.max(players[0].x,players[1].x);
+  camX=Math.max(0,lead-18);
+  // hud
+  document.getElementById("hud1").innerHTML=`🔵 P1 ${players[0].moto.nome}<br>⚡ ${Math.round(players[0].v*3.6)} km/h • 📏 ${Math.floor(players[0].x)}m • ⭐ ${Math.floor(players[0].pontos)} ${players[0].crash>0?"• 💥 CAPOTOU":""} ${players[0].turbo?"• 🟢 GRAU!":""}`;
+  document.getElementById("hud2").innerHTML=`🟡 P2 ${players[1].moto.nome}<br>⚡ ${Math.round(players[1].v*3.6)} km/h • 📏 ${Math.floor(players[1].x)}m • ⭐ ${Math.floor(players[1].pontos)} ${players[1].crash>0?"• 💥 CAPOTOU":""} ${players[1].turbo?"• 🟢 GRAU!":""}`;
+  if(players[0].finished && players[1].finished) terminar();
+  else if(players[0].finished || players[1].finished){
+    // espera 6s o outro ou termina
+    const f = players[0].finished||players[1].finished;
+    if(nowSec()-f>6) terminar();
+  }
+}
+function nowSec(){ return performance.now()/1000; }
+function terminar(){
+  if(fim) return; fim=true; estado="end";
+  const [a,b]=players;
+  let win = a.x===b.x ? (a.pontos>=b.pontos?0:1) : (a.x>b.x?0:1);
+  if(a.finished&&!b.finished) win=0;
+  if(b.finished&&!a.finished) win=1;
+  if(a.finished&&b.finished) win = a.finished<b.finished?0:1;
+  const w = players[win];
+  document.getElementById("msg").textContent = win===0?"🔵 P1 VENCEU!":"🟡 P2 VENCEU!";
+  document.getElementById("winText").textContent = win===0?"🏆🔵 P1 VENCEU!":"🏆🟡 P2 VENCEU!";
+  document.getElementById("finishStats").innerHTML =
+    `${w.moto.emoji} <b>${w.moto.nome}</b><br>📏 P1: ${Math.floor(a.x)}m • ⭐ ${Math.floor(a.pontos)} pts<br>📏 P2: ${Math.floor(b.x)}m • ⭐ ${Math.floor(b.pontos)} pts<br><small>Enter = jogar de novo</small>`;
+  document.getElementById("finish").style.display="block";
+  beep(523,0.15); setTimeout(()=>beep(659,0.15),160); setTimeout(()=>beep(784,0.3),320);
+}
+
+function draw(){
+  const W=cv.width,H=cv.height;
+  // céu
+  const g=ctx.createLinearGradient(0,0,0,H); g.addColorStop(0,"#7ec8ff"); g.addColorStop(1,"#d8f3ff");
+  ctx.fillStyle=g; ctx.fillRect(0,0,W,H);
+  // sol + nuvens
+  ctx.fillStyle="#ffdf4d"; ctx.beginPath(); ctx.arc(860,60,34,0,7); ctx.fill();
+  ctx.fillStyle="rgba(255,255,255,.9)";
+  const t=performance.now()/1000;
+  for(let i=0;i<4;i++){ const nx=((i*300+t*20)%1100)-60; ctx.beginPath(); ctx.ellipse(nx,50+i*22,52,16,0,0,7); ctx.fill(); }
+  // prédios fundo
+  ctx.fillStyle="#9db4c8";
+  for(let i=0;i<24;i++){ const bx=i*70-((camX*2)%70); ctx.fillRect(bx,90+(i%3)*12,44,90); }
+  // faixas das pistas
+  const lanes=[{y:130,h:120},{y:280,h:120}];
+  lanes.forEach((L,li)=>{
+    ctx.fillStyle="#3a3a3a"; ctx.fillRect(0,L.y,W,L.h);
+    ctx.fillStyle="#2b2b2b"; ctx.fillRect(0,L.y+L.h-18,W,18);
+    // linha de chegada
+    const fx = (PISTA-camX)*22;
+    if(fx>0&&fx<W){ for(let k=0;k<6;k++)for(let j=0;j<L.h;j+=12){ ctx.fillStyle=(k+j/12)%2?"#fff":"#000"; ctx.fillRect(fx+k*8,L.y+j,8,12);} }
+    // faixas tracejadas
+    ctx.fillStyle="#ffcf00";
+    for(let x=-((camX*22)%80);x<W;x+=80) ctx.fillRect(x,L.y+L.h/2-3,44,6);
+    // distância marcas
+    ctx.fillStyle="#fff"; ctx.font="12px Arial";
+    for(let d=0;d<=PISTA;d+=250){ const dx=(d-camX)*22; if(dx>-20&&dx<W+20) ctx.fillText(d+"m",dx,L.y+14); }
+  });
+  if(estado==="menu"){ ctx.fillStyle="rgba(0,0,0,.55)"; ctx.fillRect(0,0,W,H); ctx.fillStyle="#fff"; ctx.font="bold 26px Arial"; ctx.textAlign="center"; ctx.fillText("Escolha as motos e aperte ENTER 🏁",W/2,H/2); ctx.textAlign="left"; return; }
+  players.forEach((p,i)=>{
+    const L=lanes[i];
+    const sx=120 + (p.x-camX)*22 - 120;
+    // trava na tela: jogador fica entre x=60 e x=700
+    let drawX = 90 + (p.x-camX)*22;
+    if(i===0&&players[1].x-players[0].x>25) drawX=90;
+    if(i===1&&players[0].x-players[1].x>25) drawX=90;
+    // se líder muito na frente, mostra os dois: usa camX já no líder, então o de trás pode sair da tela -> prende mínimo
+    drawX=Math.max(30,Math.min(W-160,drawX));
+    const baseY=L.y+L.h-28;
+    drawMoto(drawX,baseY,p);
+    // nome
+    ctx.fillStyle=i===0?"#00c3ff":"#ffcf00"; ctx.font="bold 14px Arial";
+    ctx.fillText((i===0?"P1 ":"P2 ")+p.moto.nome,drawX-10,L.y+28);
+    // medidor de ângulo
+    const ax=drawX+110, ay=baseY-90;
+    ctx.fillStyle="rgba(0,0,0,.6)"; ctx.fillRect(ax-8,ay-70,16,80);
+    ctx.fillStyle="#333"; ctx.fillRect(ax-8,ay-70,16,80);
+    // zona verde
+    ctx.fillStyle="#00e676"; ctx.fillRect(ax-8,ay-70,16,33);
+    ctx.fillStyle="#ff3b3b"; ctx.fillRect(ax-8,ay-70+68,16,12);
+    const h=Math.min(80,p.ang/96*80);
+    ctx.fillStyle=p.ang>=85?"#ff0000":(p.turbo?"#00ff88":"#ffcf00");
+    ctx.fillRect(ax-8,ay-h,16,h);
+    ctx.fillStyle="#fff"; ctx.font="11px Arial"; ctx.fillText(Math.round(p.ang)+"°",ax-14,ay+14);
+    if(p.crash>0){ ctx.font="28px Arial"; ctx.fillText("💥",drawX+20,baseY-60); }
+    else if(p.turbo){ ctx.font="18px Arial"; ctx.fillText("🔥 GRAU!",drawX+10,baseY-95); }
+  });
+}
+function drawMoto(x,y,p){
+  const m=p.moto;
+  const ang=p.ang*Math.PI/180;
+  ctx.save(); ctx.translate(x,y);
+  // sombra
+  ctx.fillStyle="rgba(0,0,0,.3)"; ctx.beginPath(); ctx.ellipse(35,6,52,10,0,0,7); ctx.fill();
+  // roda traseira
+  ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(0,0,20,0,7); ctx.fill();
+  ctx.fillStyle="#888"; ctx.beginPath(); ctx.arc(0,0,9,0,7); ctx.fill();
+  // corpo inclinado: gira em torno da roda traseira
+  ctx.save(); ctx.rotate(-ang*0.9);
+  // chassi
+  ctx.fillStyle=m.cor; ctx.fillRect(-6,-26,72,16);
+  ctx.fillStyle=m.cor2; ctx.fillRect(40,-30,26,12);
+  // tanque+banco
+  ctx.fillStyle="#111"; ctx.fillRect(6,-32,30,8);
+  // guidão
+  ctx.strokeStyle="#222"; ctx.lineWidth=5; ctx.beginPath(); ctx.moveTo(62,-24); ctx.lineTo(78,-36); ctx.stroke();
+  // roda dianteira (sobe com o grau)
+  const fx=86, fy=-18;
+  ctx.fillStyle="#111"; ctx.beginPath(); ctx.arc(fx,fy,20,0,7); ctx.fill();
+  ctx.fillStyle="#888"; ctx.beginPath(); ctx.arc(fx,fy,9,p.wheel,p.wheel+5); ctx.fill();
+  ctx.restore();
+  // piloto
+  const px=18, py=-34 - Math.sin(ang)*18;
+  ctx.fillStyle="#ffcc99"; ctx.beginPath(); ctx.arc(px,py-14,10,0,7); ctx.fill();
+  ctx.fillStyle=iColor(p.id); ctx.fillRect(px-9,py-8,20,18);
+  ctx.fillStyle="#222"; ctx.fillRect(px-9,py+8,10,14);
+  ctx.restore();
+}
+function iColor(id){ return id===0?"#00c3ff":"#ffcf00"; }
+
+renderMenu();
+requestAnimationFrame(loop);
+</script>
 </body>
 </html>
